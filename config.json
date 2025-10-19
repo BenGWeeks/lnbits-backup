@@ -1,6 +1,6 @@
 {
   "name": "Database Backup",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "short_description": "Automatic scheduled database backups",
   "tile": "/backup/static/image/backup.png",
   "min_lnbits_version": "1.0.0",
