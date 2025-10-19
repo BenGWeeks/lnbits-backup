@@ -308,5 +308,3 @@ window.app = Vue.createApp({
     this.getSchedules()
   }
 })
-
-window.app.use(Quasar).mount('#vue')
