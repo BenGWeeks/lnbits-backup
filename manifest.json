@@ -1,6 +1,9 @@
 {
-  "featured": false,
-  "installed_release": {
-    "version": "1.0.0"
-  }
+  "name": "Database Backup",
+  "short_description": "Automatic scheduled database backups",
+  "tile": "backup.png",
+  "contributors": ["BenGWeeks"],
+  "hidden": false,
+  "min_lnbits_version": "1.0.0",
+  "version": "1.0.0"
 }
