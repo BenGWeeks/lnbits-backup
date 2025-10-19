@@ -1,0 +1,17 @@
+{
+    "featured": [],
+    "extensions": [
+        {
+            "id": "backup",
+            "repo": "https://github.com/BenGWeeks/lnbits-backup",
+            "name": "Database Backup",
+            "version": "1.0.0",
+            "min_lnbits_version": "1.0.0",
+            "short_description": "Automatic scheduled database backups with hourly, daily, weekly, and monthly frequencies.",
+            "icon": "https://raw.githubusercontent.com/BenGWeeks/lnbits-backup/main/static/image/backup.png",
+            "details_link": "https://raw.githubusercontent.com/BenGWeeks/lnbits-backup/main/config.json",
+            "archive": "https://github.com/BenGWeeks/lnbits-backup/archive/refs/tags/v1.0.0.zip",
+            "hash": ""
+        }
+    ]
+}
