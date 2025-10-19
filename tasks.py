@@ -33,8 +33,10 @@ async def execute_database_backup(schedule: BackupSchedule) -> tuple[bool, str, 
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         backup_filename = f"lnbits_backup_{timestamp}"
 
-        # Create backup directory if it doesn't exist
-        backup_dir = Path(schedule.backup_path)
+        # Create backup directory with schedule-specific subdirectory to prevent retention conflicts
+        # This ensures each schedule manages its own backups independently
+        base_backup_dir = Path(schedule.backup_path)
+        backup_dir = base_backup_dir / schedule.id
         backup_dir.mkdir(parents=True, exist_ok=True)
 
         # Determine database type from settings
@@ -85,18 +87,27 @@ async def execute_database_backup(schedule: BackupSchedule) -> tuple[bool, str, 
 
             backup_file = backup_dir / f"{backup_filename}.sqlite3"
 
-            # Use SQLite VACUUM INTO for safe backup (requires SQLite 3.27+)
+            # Use SQLite backup API for safe backup (no SQL injection risk)
             try:
                 import sqlite3
 
-                conn = sqlite3.connect(str(source_db))
-                conn.execute("VACUUM")  # Optimize first
-                conn.execute(f"VACUUM INTO '{backup_file}'")
-                conn.close()
+                # Connect to source database
+                source_conn = sqlite3.connect(str(source_db))
+
+                # Connect to backup database (creates new file)
+                backup_conn = sqlite3.connect(str(backup_file))
+
+                # Use SQLite's built-in backup API (safe and atomic)
+                source_conn.backup(backup_conn)
+
+                # Close connections
+                backup_conn.close()
+                source_conn.close()
+
                 logger.info(f"✅ SQLite backup created: {backup_file}")
 
             except Exception as e:
-                logger.warning(f"⚠️ VACUUM INTO failed: {e}, trying file copy...")
+                logger.warning(f"⚠️ SQLite backup API failed: {e}, trying file copy...")
                 # Fallback to file copy
                 shutil.copy2(source_db, backup_file)
                 logger.info(f"✅ SQLite backup created (file copy): {backup_file}")
@@ -271,23 +282,29 @@ async def check_and_process_backups():  # noqa: C901
                                     f"❌ Backup failed for schedule: {schedule.name}"
                                 )
 
-                            # Update next backup date based on frequency
+                            # Calculate next backup date from start_datetime anchor to prevent drift
+                            # This ensures backups always run at the same time of day
+                            start_dt = ensure_timezone_aware(schedule.start_datetime)
+
                             if schedule.frequency_type == "hourly":
-                                schedule.next_backup_date = current_time + timedelta(
-                                    hours=1
-                                )
+                                # Calculate how many hours since start
+                                hours_elapsed = int((current_time - start_dt).total_seconds() / 3600)
+                                schedule.next_backup_date = start_dt + timedelta(hours=hours_elapsed + 1)
                             elif schedule.frequency_type == "daily":
-                                schedule.next_backup_date = current_time + timedelta(
-                                    days=1
-                                )
+                                # Calculate how many days since start
+                                days_elapsed = (current_time.date() - start_dt.date()).days
+                                schedule.next_backup_date = start_dt + timedelta(days=days_elapsed + 1)
                             elif schedule.frequency_type == "weekly":
-                                schedule.next_backup_date = current_time + timedelta(
-                                    weeks=1
-                                )
+                                # Calculate how many weeks since start
+                                weeks_elapsed = int((current_time - start_dt).days / 7)
+                                schedule.next_backup_date = start_dt + timedelta(weeks=weeks_elapsed + 1)
                             elif schedule.frequency_type == "monthly":
-                                schedule.next_backup_date = (
-                                    current_time + relativedelta(months=1)
+                                # Calculate how many months since start
+                                months_elapsed = (
+                                    (current_time.year - start_dt.year) * 12
+                                    + (current_time.month - start_dt.month)
                                 )
+                                schedule.next_backup_date = start_dt + relativedelta(months=months_elapsed + 1)
 
                             # Update the next backup date in database
                             await update_next_backup_date(

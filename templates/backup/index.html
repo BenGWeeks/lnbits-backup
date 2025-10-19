@@ -183,6 +183,7 @@
           v-model="formDialog.data.name"
           label="Schedule Name *"
           placeholder="e.g., Daily Database Backup"
+          hint="Descriptive name to identify this backup schedule"
         ></q-input>
 
         <q-input
@@ -190,8 +191,8 @@
           dense
           v-model="formDialog.data.backup_path"
           label="Backup Directory Path *"
-          placeholder="e.g., /path/to/backups or ./backups"
-          hint="Absolute or relative path where backups will be stored"
+          placeholder="e.g., /app/data/backups"
+          hint="Base directory for backups (each schedule creates its own subdirectory)"
         ></q-input>
 
         <q-select
@@ -202,6 +203,7 @@
           label="Frequency *"
           emit-value
           map-options
+          hint="How often backups run: Hourly (every hour) | Daily (same time each day) | Weekly (same day/time each week) | Monthly (same date/time each month)"
         ></q-select>
 
         <q-input
@@ -210,7 +212,7 @@
           v-model="formDialog.data.start_datetime"
           label="Start Date & Time *"
           type="datetime-local"
-          hint="When to start the backup schedule"
+          hint="First backup time (also sets the recurring pattern, e.g., daily at 2:00 AM, weekly on Mondays at 2:00 AM)"
         ></q-input>
 
         <q-input
@@ -237,13 +239,17 @@
           v-model="formDialog.data.compress"
           label="Compress Backups (gzip)"
           color="primary"
-        ></q-toggle>
+        >
+          <q-tooltip>Reduces backup file size using gzip compression</q-tooltip>
+        </q-toggle>
 
         <q-toggle
           v-model="formDialog.data.active"
           label="Active"
           color="primary"
-        ></q-toggle>
+        >
+          <q-tooltip>Schedule will only run when active (can be paused by disabling)</q-tooltip>
+        </q-toggle>
 
         <div class="row q-mt-lg">
           <q-btn

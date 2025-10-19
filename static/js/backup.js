@@ -85,7 +85,7 @@ window.app = Vue.createApp({
         active: true,
         compress: true,
         retention_count: 7,
-        backup_path: './backups',
+        backup_path: '/app/data/backups',
         start_datetime: defaultStart,
         next_backup_date: defaultStart
       }

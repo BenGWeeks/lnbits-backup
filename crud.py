@@ -81,10 +81,15 @@ async def get_backup_schedules(wallet_ids: Union[str, list[str]]) -> list[Backup
     """Get all backup schedules for given wallet(s)"""
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
-    q = ",".join([f"'{w}'" for w in wallet_ids])
+
+    # Build parameterized query for IN clause to prevent SQL injection
+    placeholders = ",".join([f":wallet_{i}" for i in range(len(wallet_ids))])
+    params = {f"wallet_{i}": wallet_id for i, wallet_id in enumerate(wallet_ids)}
+
     return await db.fetchall(
-        f"SELECT * FROM backup_schedules WHERE wallet IN ({q}) ORDER BY created_at DESC",
-        model=BackupSchedule,
+        f"SELECT * FROM backup_schedules WHERE wallet IN ({placeholders}) ORDER BY created_at DESC",
+        params,
+        BackupSchedule,
     )
 
 
@@ -154,12 +159,12 @@ async def update_next_backup_date(schedule_id: str, next_backup_date) -> None:
         next_backup_ts = next_backup_date
 
     await db.execute(
-        f"""
+        """
         UPDATE backup_schedules
-        SET next_backup_date = ({next_backup_ts})
+        SET next_backup_date = :next_backup_date
         WHERE id = :id
         """,
-        {"id": schedule_id},
+        {"id": schedule_id, "next_backup_date": next_backup_ts},
     )
 
 

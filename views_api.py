@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from http import HTTPStatus
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -82,6 +83,58 @@ def parse_datetime_string(date_str: Optional[str]) -> Optional[datetime]:
     return None
 
 
+def validate_backup_path(backup_path: str) -> None:
+    """
+    Validate that the backup path is usable.
+    Raises HTTPException if validation fails.
+    """
+    if not backup_path or not backup_path.strip():
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Backup path cannot be empty",
+        )
+
+    try:
+        path = Path(backup_path)
+
+        # If path exists, verify it's a directory and writable
+        if path.exists():
+            if not path.is_dir():
+                raise HTTPException(
+                    status_code=HTTPStatus.BAD_REQUEST,
+                    detail=f"Backup path exists but is not a directory: {backup_path}",
+                )
+
+            # Test write permissions by attempting to create a temp file
+            test_file = path / ".lnbits_backup_write_test"
+            try:
+                test_file.touch()
+                test_file.unlink()
+            except (PermissionError, OSError) as e:
+                raise HTTPException(
+                    status_code=HTTPStatus.BAD_REQUEST,
+                    detail=f"No write permission for backup path: {backup_path}",
+                )
+        else:
+            # Path doesn't exist - try to create it to verify permissions
+            try:
+                path.mkdir(parents=True, exist_ok=True)
+                logger.info(f"Created backup directory: {path}")
+            except (PermissionError, OSError) as e:
+                raise HTTPException(
+                    status_code=HTTPStatus.BAD_REQUEST,
+                    detail=f"Cannot create backup directory (permission denied): {backup_path}",
+                )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail=f"Invalid backup path: {backup_path} ({str(e)})",
+        )
+
+
 @backup_api_router.get("/api/v1/wallet-info", status_code=HTTPStatus.OK)
 async def api_wallet_info(
     wallet: Wallet = Depends(require_invoice_key),
@@ -157,13 +210,13 @@ async def api_create_schedule(
     # Set wallet to current user's wallet
     data.wallet = wallet_id
 
-    # Parse datetime strings if needed
-    if isinstance(data.start_datetime, str):
-        data.start_datetime = parse_datetime_string(data.start_datetime)
-    if isinstance(data.next_backup_date, str):
-        data.next_backup_date = parse_datetime_string(data.next_backup_date)
-    if data.end_datetime and isinstance(data.end_datetime, str):
-        data.end_datetime = parse_datetime_string(data.end_datetime)
+    # Ensure datetimes are timezone-aware (convert naive datetimes to UTC)
+    if data.start_datetime.tzinfo is None:
+        data.start_datetime = data.start_datetime.replace(tzinfo=timezone.utc)
+    if data.next_backup_date.tzinfo is None:
+        data.next_backup_date = data.next_backup_date.replace(tzinfo=timezone.utc)
+    if data.end_datetime and data.end_datetime.tzinfo is None:
+        data.end_datetime = data.end_datetime.replace(tzinfo=timezone.utc)
 
     # Validate frequency
     valid_frequencies = ["hourly", "daily", "weekly", "monthly"]
@@ -172,6 +225,9 @@ async def api_create_schedule(
             status_code=HTTPStatus.BAD_REQUEST,
             detail=f"Invalid frequency. Must be one of: {', '.join(valid_frequencies)}",
         )
+
+    # Validate backup path is writable
+    validate_backup_path(data.backup_path)
 
     schedule = await create_backup_schedule(data)
     logger.info(f"✅ Created backup schedule: {schedule.name} (ID: {schedule.id})")
@@ -204,13 +260,16 @@ async def api_update_schedule(
     data.id = schedule_id
     data.wallet = wallet_id
 
-    # Parse datetime strings if needed
-    if isinstance(data.start_datetime, str):
-        data.start_datetime = parse_datetime_string(data.start_datetime)
-    if isinstance(data.next_backup_date, str):
-        data.next_backup_date = parse_datetime_string(data.next_backup_date)
-    if data.end_datetime and isinstance(data.end_datetime, str):
-        data.end_datetime = parse_datetime_string(data.end_datetime)
+    # Ensure datetimes are timezone-aware (convert naive datetimes to UTC)
+    if data.start_datetime.tzinfo is None:
+        data.start_datetime = data.start_datetime.replace(tzinfo=timezone.utc)
+    if data.next_backup_date.tzinfo is None:
+        data.next_backup_date = data.next_backup_date.replace(tzinfo=timezone.utc)
+    if data.end_datetime and data.end_datetime.tzinfo is None:
+        data.end_datetime = data.end_datetime.replace(tzinfo=timezone.utc)
+
+    # Validate backup path is writable
+    validate_backup_path(data.backup_path)
 
     updated_schedule = await update_backup_schedule(data)
     logger.info(f"✅ Updated backup schedule: {updated_schedule.name}")
