@@ -5,13 +5,13 @@
             "id": "backup",
             "repo": "https://github.com/BenGWeeks/lnbits-backup",
             "name": "Database Backup",
-            "version": "0.0.2",
+            "version": "0.0.3",
             "min_lnbits_version": "1.0.0",
             "short_description": "Automatic scheduled database backups with hourly, daily, weekly, and monthly frequencies.",
             "icon": "https://raw.githubusercontent.com/BenGWeeks/lnbits-backup/main/static/image/backup.png",
             "details_link": "https://raw.githubusercontent.com/BenGWeeks/lnbits-backup/main/config.json",
-            "archive": "https://github.com/BenGWeeks/lnbits-backup/archive/refs/tags/v0.0.2.zip",
-            "hash": "76b63045d842a134488ae6adf34d9805d081f0b9b6e04b57a0a9013c9a1e8d8d"
+            "archive": "https://github.com/BenGWeeks/lnbits-backup/archive/refs/tags/v0.0.3.zip",
+            "hash": "483b60390f4516f4e2e9ed5016fb90fb094cd234c7d9405d7fce370bd5a3fe3b"
         }
     ]
 }
