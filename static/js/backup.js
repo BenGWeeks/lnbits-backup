@@ -10,6 +10,7 @@ window.app = Vue.createApp({
       scheduleTable: {
         columns: [
           {name: 'name', align: 'left', label: 'Name', field: 'name', sortable: true},
+          {name: 'id', align: 'left', label: 'Schedule ID', field: 'id', sortable: true},
           {name: 'backup_path', align: 'left', label: 'Backup Path', field: 'backup_path', sortable: true},
           {name: 'frequency_type', align: 'center', label: 'Frequency', field: 'frequency_type', sortable: true},
           {name: 'next_backup_date', align: 'left', label: 'Next Backup', field: 'next_backup_date', sortable: true},
@@ -32,6 +33,12 @@ window.app = Vue.createApp({
         {label: 'Weekly', value: 'weekly'},
         {label: 'Monthly', value: 'monthly'}
       ]
+    }
+  },
+  computed: {
+    formattedStartDatetime() {
+      if (!this.formDialog.data.start_datetime || this.formDialog.data.start_datetime === '') return ''
+      return this.formatDatetimeForDisplay(this.formDialog.data.start_datetime)
     }
   },
   methods: {
@@ -93,9 +100,8 @@ window.app = Vue.createApp({
       console.log('📅 Form opened with default start datetime:', defaultStart)
     },
     openEditDialog(schedule) {
-      // Convert timestamps to datetime-local format
+      // Convert timestamps to Quasar datetime format
       const start = schedule.start_datetime ? this.toQuasarDatetimeString(new Date(schedule.start_datetime * 1000)) : ''
-      const end = schedule.end_datetime ? this.toQuasarDatetimeString(new Date(schedule.end_datetime * 1000)) : ''
       const next = schedule.next_backup_date ? this.toQuasarDatetimeString(new Date(schedule.next_backup_date * 1000)) : ''
 
       this.formDialog.data = {
@@ -105,7 +111,6 @@ window.app = Vue.createApp({
         backup_path: schedule.backup_path,
         frequency_type: schedule.frequency_type,
         start_datetime: start,
-        end_datetime: end,
         next_backup_date: next,
         retention_count: schedule.retention_count || 7,
         compress: schedule.compress !== false,
@@ -275,7 +280,20 @@ window.app = Vue.createApp({
     },
     formatDatetime(timestamp) {
       if (!timestamp) return '-'
-      const date = new Date(timestamp * 1000)
+
+      // Handle both Unix timestamp (seconds) and ISO string formats
+      let date
+      if (typeof timestamp === 'string') {
+        date = new Date(timestamp)
+      } else {
+        date = new Date(timestamp * 1000)
+      }
+
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid Date'
+      }
+
       return date.toLocaleString(this.userLocale, {
         year: 'numeric',
         month: 'short',
@@ -294,13 +312,53 @@ window.app = Vue.createApp({
       return `${kb.toFixed(2)} KB`
     },
     toQuasarDatetimeString(date) {
-      // Convert Date object to "YYYY-MM-DDTHH:mm" format for datetime-local input
+      // Convert Date object to "YYYY-MM-DD HH:mm" format for Quasar date/time pickers
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
       const hours = String(date.getHours()).padStart(2, '0')
       const minutes = String(date.getMinutes()).padStart(2, '0')
-      return `${year}-${month}-${day}T${hours}:${minutes}`
+      return `${year}-${month}-${day} ${hours}:${minutes}`
+    },
+    copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        Quasar.Notify.create({
+          type: 'positive',
+          message: 'Schedule ID copied to clipboard',
+          timeout: 2000
+        })
+      }).catch(err => {
+        console.error('Failed to copy to clipboard:', err)
+        Quasar.Notify.create({
+          type: 'negative',
+          message: 'Failed to copy to clipboard',
+          timeout: 3000
+        })
+      })
+    },
+    formatDatetimeForDisplay(datetimeString) {
+      // Format datetime from "YYYY-MM-DD HH:mm" to locale-aware display string
+      if (!datetimeString) return ''
+      // Parse the datetime string (in format "YYYY-MM-DD HH:mm")
+      const date = new Date(datetimeString.replace(' ', 'T'))
+      if (!date || isNaN(date.getTime())) return ''
+      // Use locale-aware formatting for display
+      return date.toLocaleString(this.userLocale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      })
+    },
+    isDateInFuture(date) {
+      // date format: "YYYY/MM/DD" (QDate format)
+      const selectedDate = new Date(date)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0) // Reset to start of day
+      selectedDate.setHours(0, 0, 0, 0)
+      return selectedDate >= today
     }
   },
   created() {
