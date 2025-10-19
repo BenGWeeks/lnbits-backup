@@ -1,0 +1,25 @@
+{
+  "name": "Database Backup",
+  "version": "1.0.0",
+  "short_description": "Automatic scheduled database backups",
+  "tile": "backup.png",
+  "min_lnbits_version": "1.0.0",
+  "contributors": [
+    {
+      "name": "Ben Weeks",
+      "uri": "https://github.com/BenGWeeks",
+      "role": "Chief Builder"
+    }
+  ],
+  "images": [
+    {
+      "uri": "https://raw.githubusercontent.com/BenGWeeks/allowance/main/static/image/banner_cropped.png",
+      "link": ""
+    }
+  ],
+  "hidden": false,
+  "migration_module": "lnbits.extensions.backup.migrations",
+  "db_name": "ext_backup",
+  "description_md": "https://raw.githubusercontent.com/BenGWeeks/lnbits-backup/main/description.md",
+  "license": "MIT"
+}

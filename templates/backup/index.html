@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% from "macros.jinja" import window_vars with context %}
+
+{% block page %}
+<div class="row q-col-gutter-md" id="vue" data-cy="backup-extension">
+  <div class="col-12 col-md-7 q-gutter-y-md">
+    <q-card>
+      <q-card-section>
+        <q-btn unelevated color="primary" @click="openCreateDialog" icon="add" data-cy="new-schedule-btn"
+          >New Backup Schedule</q-btn
+        >
+      </q-card-section>
+    </q-card>
+
+    <q-card>
+      <q-card-section>
+        <div class="row items-center no-wrap q-mb-md">
+          <div class="col">
+            <h5 class="text-subtitle1 q-my-none">Backup Schedules</h5>
+          </div>
+          <div class="col-auto">
+            <q-btn
+              flat
+              color="grey"
+              @click="refreshSchedules"
+              icon="refresh"
+              size="sm"
+              ><q-tooltip>Refresh</q-tooltip></q-btn
+            >
+          </div>
+        </div>
+        <div class="row q-mb-md">
+          <div class="col-12">
+            <q-input
+              dense
+              outlined
+              v-model="scheduleTable.filter"
+              placeholder="Search schedules..."
+              clearable
+            >
+              <template v-slot:prepend>
+                <q-icon name="search" />
+              </template>
+            </q-input>
+          </div>
+        </div>
+        <q-table
+          dense
+          flat
+          :rows="schedules"
+          :columns="scheduleTable.columns"
+          row-key="id"
+          v-model:pagination="scheduleTable.pagination"
+          :filter="scheduleTable.filter"
+          :loading="scheduleTable.loading"
+        >
+          <template v-slot:header="props">
+            <q-tr class="text-left" :props="props">
+              <q-th v-for="col in props.cols" :key="col.name" :props="props">
+                <span v-text="col.label"></span>
+              </q-th>
+              <q-th auto-width></q-th>
+            </q-tr>
+          </template>
+          <template v-slot:body="props">
+            <q-tr :props="props">
+              <q-td v-for="col in props.cols" :key="col.name" :props="props">
+                <span v-if="col.name == 'backup_path'">
+                  <q-icon name="folder" class="q-mr-xs" />
+                  <span v-text="col.value"></span>
+                </span>
+                <span v-else-if="col.name == 'frequency_type'">
+                  <q-badge :label="formatFrequency(col.value)" />
+                </span>
+                <span v-else-if="col.name == 'status'">
+                  <q-badge
+                    :color="props.row.active ? (props.row.last_error ? 'negative' : 'positive') : 'grey'"
+                    :label="props.row.active ? (props.row.last_error ? 'Error' : 'Active') : 'Inactive'"
+                  >
+                    <q-tooltip v-if="props.row.last_error">
+                      <div class="text-weight-bold">Last Error:</div>
+                      <div class="q-mt-xs" v-text="props.row.last_error"></div>
+                      <div class="q-mt-xs text-caption" v-if="props.row.last_error_time">
+                        <span v-text="formatDatetime(props.row.last_error_time)"></span>
+                      </div>
+                      <div class="q-mt-sm text-weight-bold">Last Successful Backup:</div>
+                      <div class="q-mt-xs text-caption">
+                        <span v-if="props.row.last_success_time" v-text="formatDatetime(props.row.last_success_time)"></span>
+                        <span v-else style="font-style: italic;">Never</span>
+                      </div>
+                    </q-tooltip>
+                    <q-tooltip v-else-if="props.row.active">
+                      <div class="text-weight-bold">Last Successful Backup:</div>
+                      <div class="q-mt-xs text-caption">
+                        <span v-if="props.row.last_success_time" v-text="formatDatetime(props.row.last_success_time)"></span>
+                        <span v-else style="font-style: italic;">Never</span>
+                      </div>
+                      <div class="q-mt-sm text-caption" v-if="props.row.last_backup_size">
+                        Size: <span v-text="formatFileSize(props.row.last_backup_size)"></span>
+                      </div>
+                    </q-tooltip>
+                  </q-badge>
+                </span>
+                <span v-else-if="col.name == 'next_backup_date'">
+                  <span v-if="props.row.active" v-text="formatDatetime(col.value)"></span>
+                  <span v-else class="text-grey">-</span>
+                </span>
+                <span v-else v-text="col.value"></span>
+              </q-td>
+              <q-td auto-width>
+                <q-btn
+                  flat
+                  dense
+                  size="sm"
+                  icon="backup"
+                  color="primary"
+                  @click="manualBackup(props.row)"
+                  :loading="props.row.backing_up"
+                >
+                  <q-tooltip>Trigger Manual Backup</q-tooltip>
+                </q-btn>
+                <q-btn
+                  flat
+                  dense
+                  size="sm"
+                  icon="edit"
+                  color="primary"
+                  @click="openEditDialog(props.row)"
+                >
+                  <q-tooltip>Edit</q-tooltip>
+                </q-btn>
+                <q-btn
+                  flat
+                  dense
+                  size="sm"
+                  icon="delete"
+                  color="negative"
+                  @click="deleteSchedule(props.row)"
+                >
+                  <q-tooltip>Delete</q-tooltip>
+                </q-btn>
+              </q-td>
+            </q-tr>
+          </template>
+        </q-table>
+      </q-card-section>
+    </q-card>
+  </div>
+
+  <div class="col-12 col-md-5 q-gutter-y-md">
+    <q-card>
+      <q-card-section>
+        <h6 class="text-subtitle1 q-my-none q-mb-md">About Database Backup</h6>
+        <p class="text-caption text-grey">
+          This extension automatically backs up your LNbits database on a schedule.
+          Supports SQLite and PostgreSQL databases with compression and retention policies.
+        </p>
+        <div class="q-mt-md">
+          <div class="text-weight-bold text-caption">Supported Frequencies:</div>
+          <ul class="text-caption q-mt-sm">
+            <li>Hourly - Every hour</li>
+            <li>Daily - Once per day</li>
+            <li>Weekly - Once per week</li>
+            <li>Monthly - Once per month</li>
+          </ul>
+        </div>
+      </q-card-section>
+    </q-card>
+  </div>
+
+  <!-- Create/Edit Dialog -->
+  <q-dialog v-model="formDialog.show" position="top">
+    <q-card class="q-pa-lg q-pt-xl lnbits__dialog-card">
+      <q-form @submit="saveSchedule" class="q-gutter-md">
+        <h5 class="q-my-none q-mb-md">
+          <span v-if="formDialog.data.id">Edit Backup Schedule</span>
+          <span v-else>New Backup Schedule</span>
+        </h5>
+
+        <q-input
+          filled
+          dense
+          v-model="formDialog.data.name"
+          label="Schedule Name *"
+          placeholder="e.g., Daily Database Backup"
+        ></q-input>
+
+        <q-input
+          filled
+          dense
+          v-model="formDialog.data.backup_path"
+          label="Backup Directory Path *"
+          placeholder="e.g., /path/to/backups or ./backups"
+          hint="Absolute or relative path where backups will be stored"
+        ></q-input>
+
+        <q-select
+          filled
+          dense
+          v-model="formDialog.data.frequency_type"
+          :options="frequencyOptions"
+          label="Frequency *"
+          emit-value
+          map-options
+        ></q-select>
+
+        <q-input
+          filled
+          dense
+          v-model="formDialog.data.start_datetime"
+          label="Start Date & Time *"
+          type="datetime-local"
+          hint="When to start the backup schedule"
+        ></q-input>
+
+        <q-input
+          filled
+          dense
+          v-model="formDialog.data.end_datetime"
+          label="End Date & Time (Optional)"
+          type="datetime-local"
+          hint="When to stop the backup schedule (leave empty for no end date)"
+          clearable
+        ></q-input>
+
+        <q-input
+          filled
+          dense
+          v-model.number="formDialog.data.retention_count"
+          label="Retention Count *"
+          type="number"
+          min="1"
+          hint="Number of backups to keep (older backups will be deleted)"
+        ></q-input>
+
+        <q-toggle
+          v-model="formDialog.data.compress"
+          label="Compress Backups (gzip)"
+          color="primary"
+        ></q-toggle>
+
+        <q-toggle
+          v-model="formDialog.data.active"
+          label="Active"
+          color="primary"
+        ></q-toggle>
+
+        <div class="row q-mt-lg">
+          <q-btn
+            unelevated
+            color="primary"
+            type="submit"
+            :loading="formDialog.loading"
+            >Save Schedule</q-btn
+          >
+          <q-btn flat color="grey" @click="closeFormDialog" class="q-ml-sm"
+            >Cancel</q-btn
+          >
+        </div>
+      </q-form>
+    </q-card>
+  </q-dialog>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ window_vars(user) }}
+<script src="/backup/static/js/backup.js"></script>
+{% endblock %}
