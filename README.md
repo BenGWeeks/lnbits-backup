@@ -2,6 +2,8 @@
 
 Automatic scheduled database backups for LNbits with support for SQLite and PostgreSQL databases.
 
+![LNbits Backup Banner](static/image/banner-cropped.jpg)
+
 ## Features
 
 - **Automated Scheduled Backups**: Schedule backups to run hourly, daily, weekly, or monthly
