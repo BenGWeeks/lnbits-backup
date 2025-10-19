@@ -2,7 +2,7 @@
   "name": "Database Backup",
   "version": "1.0.0",
   "short_description": "Automatic scheduled database backups",
-  "tile": "backup.png",
+  "tile": "/backup/static/image/backup.png",
   "min_lnbits_version": "1.0.0",
   "contributors": [
     {
@@ -17,9 +17,7 @@
       "link": ""
     }
   ],
-  "hidden": false,
-  "migration_module": "lnbits.extensions.backup.migrations",
-  "db_name": "ext_backup",
   "description_md": "https://raw.githubusercontent.com/BenGWeeks/lnbits-backup/main/description.md",
+  "terms_and_conditions_md": "https://raw.githubusercontent.com/BenGWeeks/lnbits-backup/main/LICENSE",
   "license": "MIT"
 }
