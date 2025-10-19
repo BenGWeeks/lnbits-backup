@@ -1,0 +1,164 @@
+<q-expansion-item
+  group="extras"
+  icon="swap_vertical_circle"
+  label="API info"
+  :content-inset-level="0.5"
+>
+  <q-btn flat label="Swagger API" type="a" href="../docs#/backup"></q-btn>
+  <q-expansion-item group="api" dense expand-separator label="List schedules">
+    <q-card>
+      <q-card-section>
+        <code><span class="text-blue">GET</span> /backup/api/v1/schedules</code>
+        <h5 class="text-caption q-mt-sm q-mb-none">Headers</h5>
+        <code>{"X-Api-Key": &lt;invoice_key&gt;}</code><br />
+        <h5 class="text-caption q-mt-sm q-mb-none">Body (application/json)</h5>
+        <h5 class="text-caption q-mt-sm q-mb-none">
+          Returns 200 OK (application/json)
+        </h5>
+        <code>[&lt;schedule_object&gt;, ...]</code>
+        <h5 class="text-caption q-mt-sm q-mb-none">Curl example</h5>
+        <code
+          >curl -X GET {{ request.base_url }}backup/api/v1/schedules -H "X-Api-Key:
+          <span v-text="g.user.wallets[0].inkey"></span> "
+        </code>
+      </q-card-section>
+    </q-card>
+  </q-expansion-item>
+  <q-expansion-item group="api" dense expand-separator label="Get a schedule">
+    <q-card>
+      <q-card-section>
+        <code
+          ><span class="text-blue">GET</span>
+          /backup/api/v1/schedules/&lt;schedule_id&gt;</code
+        >
+        <h5 class="text-caption q-mt-sm q-mb-none">Headers</h5>
+        <code>{"X-Api-Key": &lt;invoice_key&gt;}</code><br />
+        <h5 class="text-caption q-mt-sm q-mb-none">Body (application/json)</h5>
+        <h5 class="text-caption q-mt-sm q-mb-none">
+          Returns 200 OK (application/json)
+        </h5>
+        <code>&lt;schedule_object&gt;</code>
+        <h5 class="text-caption q-mt-sm q-mb-none">Curl example</h5>
+        <code
+          >curl -X GET {{ request.base_url }}backup/api/v1/schedules/&lt;schedule_id&gt;
+          -H "X-Api-Key: <span v-text="g.user.wallets[0].inkey"></span>"
+        </code>
+      </q-card-section>
+    </q-card>
+  </q-expansion-item>
+  <q-expansion-item
+    group="api"
+    dense
+    expand-separator
+    label="Create a schedule"
+  >
+    <q-card>
+      <q-card-section>
+        <code><span class="text-green">POST</span> /backup/api/v1/schedules</code>
+        <h5 class="text-caption q-mt-sm q-mb-none">Headers</h5>
+        <code>{"X-Api-Key": &lt;admin_key&gt;}</code><br />
+        <h5 class="text-caption q-mt-sm q-mb-none">Body (application/json)</h5>
+        <code
+          >{"name": &lt;string&gt;, "backup_path": &lt;string&gt;, "frequency_type":
+          &lt;string&gt;, "start_datetime": &lt;string&gt;, "retention_count":
+          &lt;integer&gt;, "compress": &lt;boolean&gt;, "active": &lt;boolean&gt; }</code
+        >
+        <h5 class="text-caption q-mt-sm q-mb-none">
+          Returns 201 CREATED (application/json)
+        </h5>
+        <code>&lt;schedule_object&gt;</code>
+        <h5 class="text-caption q-mt-sm q-mb-none">Curl example</h5>
+        <code
+          >curl -X POST {{ request.base_url }}backup/api/v1/schedules -d
+          '{"name": "Daily Backup", "backup_path": "/app/data/backups", "frequency_type":
+          "daily", "start_datetime": "2025-10-20T02:00", "retention_count": 7,
+          "compress": true, "active": true}' -H "Content-type: application/json" -H "X-Api-Key:
+          <span v-text="g.user.wallets[0].adminkey"></span>"
+        </code>
+      </q-card-section>
+    </q-card>
+  </q-expansion-item>
+  <q-expansion-item
+    group="api"
+    dense
+    expand-separator
+    label="Update a schedule"
+  >
+    <q-card>
+      <q-card-section>
+        <code
+          ><span class="text-green">PUT</span>
+          /backup/api/v1/schedules/&lt;schedule_id&gt;</code
+        >
+        <h5 class="text-caption q-mt-sm q-mb-none">Headers</h5>
+        <code>{"X-Api-Key": &lt;admin_key&gt;}</code><br />
+        <h5 class="text-caption q-mt-sm q-mb-none">Body (application/json)</h5>
+        <code>{"name": &lt;string&gt;, "active": &lt;boolean&gt;}</code>
+        <h5 class="text-caption q-mt-sm q-mb-none">
+          Returns 200 OK (application/json)
+        </h5>
+        <code>&lt;schedule_object&gt;</code>
+        <h5 class="text-caption q-mt-sm q-mb-none">Curl example</h5>
+        <code
+          >curl -X PUT {{ request.base_url }}backup/api/v1/schedules/&lt;schedule_id&gt;
+          -d '{"name": "Updated Name", "active": false}' -H
+          "Content-type: application/json" -H "X-Api-Key:
+          <span v-text="g.user.wallets[0].adminkey"></span>"
+        </code>
+      </q-card-section>
+    </q-card>
+  </q-expansion-item>
+  <q-expansion-item
+    group="api"
+    dense
+    expand-separator
+    label="Delete a schedule"
+  >
+    <q-card>
+      <q-card-section>
+        <code
+          ><span class="text-pink">DELETE</span>
+          /backup/api/v1/schedules/&lt;schedule_id&gt;</code
+        >
+        <h5 class="text-caption q-mt-sm q-mb-none">Headers</h5>
+        <code>{"X-Api-Key": &lt;admin_key&gt;}</code><br />
+        <h5 class="text-caption q-mt-sm q-mb-none">Returns 200 OK</h5>
+        <code>{"success": true}</code>
+        <h5 class="text-caption q-mt-sm q-mb-none">Curl example</h5>
+        <code
+          >curl -X DELETE {{ request.base_url
+          }}backup/api/v1/schedules/&lt;schedule_id&gt; -H "X-Api-Key:
+          <span v-text="g.user.wallets[0].adminkey"></span>"
+        </code>
+      </q-card-section>
+    </q-card>
+  </q-expansion-item>
+  <q-expansion-item
+    group="api"
+    dense
+    expand-separator
+    label="Trigger manual backup"
+    class="q-pb-md"
+  >
+    <q-card>
+      <q-card-section>
+        <code
+          ><span class="text-green">POST</span>
+          /backup/api/v1/backup/manual?schedule_id=&lt;schedule_id&gt;</code
+        >
+        <h5 class="text-caption q-mt-sm q-mb-none">Headers</h5>
+        <code>{"X-Api-Key": &lt;admin_key&gt;}</code><br />
+        <h5 class="text-caption q-mt-sm q-mb-none">
+          Returns 200 OK (application/json)
+        </h5>
+        <code>{"success": true, "file_path": &lt;string&gt;, "file_size": &lt;integer&gt;}</code>
+        <h5 class="text-caption q-mt-sm q-mb-none">Curl example</h5>
+        <code
+          >curl -X POST "{{ request.base_url
+          }}backup/api/v1/backup/manual?schedule_id=&lt;schedule_id&gt;" -H "X-Api-Key:
+          <span v-text="g.user.wallets[0].adminkey"></span>"
+        </code>
+      </q-card-section>
+    </q-card>
+  </q-expansion-item>
+</q-expansion-item>

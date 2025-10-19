@@ -149,21 +149,89 @@
 
   <div class="col-12 col-md-5 q-gutter-y-md">
     <q-card>
+      <q-card-section class="q-pa-none">
+        <img src="/backup/static/image/banner-cropped.jpg"
+             alt="LNbits Database Backup - Automated scheduled backups"
+             style="width: 100%; display: block;"
+             loading="lazy" />
+      </q-card-section>
       <q-card-section>
-        <h6 class="text-subtitle1 q-my-none q-mb-md">About Database Backup</h6>
-        <p class="text-caption text-grey">
-          This extension automatically backs up your LNbits database on a schedule.
-          Supports SQLite and PostgreSQL databases with compression and retention policies.
+        <p class="q-mb-none">
+          Safeguard your LNbits data with automatic scheduled database backups. Schedule backups hourly, daily, weekly, or monthly with retention policies to automatically manage storage. Features include SQLite and PostgreSQL support, optional gzip compression, error tracking with detailed status monitoring, and manual backup triggers for on-demand protection.
         </p>
-        <div class="q-mt-md">
-          <div class="text-weight-bold text-caption">Supported Frequencies:</div>
-          <ul class="text-caption q-mt-sm">
-            <li>Hourly - Every hour</li>
-            <li>Daily - Once per day</li>
-            <li>Weekly - Once per week</li>
-            <li>Monthly - Once per month</li>
-          </ul>
-        </div>
+      </q-card-section>
+      <q-card-section class="q-pa-none">
+        <q-separator></q-separator>
+        <q-list>
+          <q-expansion-item
+            expand-separator
+            icon="help_outline"
+            label="Usage Guide"
+          >
+            <q-card>
+              <q-card-section>
+                <p class="text-subtitle2 q-mb-sm">How to use Database Backup:</p>
+                <ol class="q-pl-md">
+                  <li class="q-mb-sm">Create a new backup schedule by clicking "New Backup Schedule"</li>
+                  <li class="q-mb-sm">Enter a descriptive name to identify the schedule</li>
+                  <li class="q-mb-sm">Specify the backup directory path (each schedule gets its own subdirectory)</li>
+                  <li class="q-mb-sm">Choose the frequency (hourly, daily, weekly, or monthly)</li>
+                  <li class="q-mb-sm">Set the start date and time (this determines when backups run, e.g., daily at 2:00 AM)</li>
+                  <li class="q-mb-sm">Configure retention count (number of backups to keep)</li>
+                  <li class="q-mb-sm">Enable compression to save disk space</li>
+                  <li class="q-mb-sm">Save and activate the schedule</li>
+                </ol>
+                <p class="text-caption text-grey-7 q-mt-md">
+                  Backups will automatically run according to your schedule. You can manually trigger a backup anytime, pause, edit, or delete schedules as needed.
+                </p>
+              </q-card-section>
+            </q-card>
+          </q-expansion-item>
+          <q-separator></q-separator>
+          {% include "backup/_api_docs.html" %}
+          <q-separator></q-separator>
+          <q-expansion-item
+            expand-separator
+            icon="support"
+            label="Help"
+          >
+            <q-card>
+              <q-card-section>
+                <p class="text-body2 q-mb-sm">
+                  Check the FAQs for answers to common questions about backup schedules, retention policies, and troubleshooting.
+                </p>
+                <div class="q-mb-md">
+                  <q-btn
+                    flat
+                    color="primary"
+                    label="View FAQs"
+                    icon="help_outline"
+                    type="a"
+                    href="https://github.com/BenGWeeks/lnbits-backup/blob/main/docs/FAQs.md"
+                    target="_blank"
+                    class="full-width"
+                  />
+                </div>
+
+                <p class="text-body2 q-mb-sm">
+                  We'd love to hear your feedback! Found a bug? Have an idea for a new feature? Let us know on GitHub.
+                </p>
+                <div>
+                  <q-btn
+                    flat
+                    color="primary"
+                    label="Share Feedback on GitHub"
+                    icon="favorite"
+                    type="a"
+                    href="https://github.com/BenGWeeks/lnbits-backup/issues"
+                    target="_blank"
+                    class="full-width"
+                  />
+                </div>
+              </q-card-section>
+            </q-card>
+          </q-expansion-item>
+        </q-list>
       </q-card-section>
     </q-card>
   </div>
