@@ -7,5 +7,5 @@
   "migration_module": "lnbits.extensions.backup.migrations",
   "db_name": "ext_backup",
   "min_lnbits_version": "1.0.0",
-  "version": "1.0.0"
+  "version": "0.0.1"
 }
