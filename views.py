@@ -3,7 +3,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, Request
 from lnbits.core.models import User
-from lnbits.decorators import check_user_exists
+from lnbits.decorators import check_admin, check_user_exists
 from lnbits.helpers import template_renderer
 from starlette.responses import HTMLResponse, FileResponse
 
@@ -15,8 +15,8 @@ def backup_renderer():
 
 
 @backup_generic_router.get("/", response_class=HTMLResponse)
-async def index(request: Request, user: User = Depends(check_user_exists)):
-    """Main backup management page"""
+async def index(request: Request, user: User = Depends(check_admin)):
+    """Main backup management page (admin only)"""
     return backup_renderer().TemplateResponse(
         "backup/index.html", {"request": request, "user": user.json()}
     )
